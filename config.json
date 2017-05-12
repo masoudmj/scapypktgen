@@ -1,5 +1,5 @@
 {
-    "flownum": "100",
+    "flownum": "100000",
     "template":{
         "mac_src":"aa:aa:aa:aa:aa:aa",
         "mac_dst":"bb:bb:bb:bb:bb:bb",
