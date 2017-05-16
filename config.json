@@ -1,17 +1,21 @@
 {
     "flownum": "100000",
     "template":{
-        "mac_src":"aa:aa:aa:aa:aa:aa",
-        "mac_dst":"bb:bb:bb:bb:bb:bb",
-        "ip_src":"10.0.0.0",
-        "ip_dst":"20.0.0.0",
-        "proto":"6",
+        "mac_src":"00:00:10:32:01:02",
+        "mac_dst":"aa:aa:aa:aa:aa:44",
+        "ip_src":"10.32.1.2",
+        "ip_dst":"10.33.5.2",
+        "proto":"17",
         "port_src":"100",
         "port_dst":"200"
     },
-    "ranges":[
-        "ip-src",
-        "port_dst"
-    ],
+    "ranges":{
+        "port_src":{
+           "max":"10100"
+	},
+        "port_dst":{
+           "max":"10200"
+        }
+    },
     "pktlen": "100"
 }

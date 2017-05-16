@@ -19,33 +19,40 @@ parser.add_argument('--config', help='configuration json.',
 
 args = parser.parse_args()
 
-def inc_ip(ip, max_value):
+def inc_ip(ip, max_value, initial):
     ip=struct.unpack("!L", socket.inet_aton(ip))[0]
     ip=(ip+1) & 0xffffffff
     ip2=str(socket.inet_ntoa(struct.pack('!L', ip)))
-    return (ip2, ip2==max_value)
+    if ip2==max_value:
+      return (ip2, 1)
+    return (ip2, 0)
 
-def inc_port(port, max_value):
+def inc_port(port, max_value, initial):
     port = (port+1)&0xffff
-    return (port, port==max_value)
+    if port==max_value:
+      return (initial, 1) 
+    return (port, 0)
 
 def increment(fields, p, max_values, template):
+    m = 1
     for f in fields:
         if f=='ip_src':
-            p[IP].src, _=inc_ip(p[IP].src, 0)
+            p[IP].src, m=inc_ip(p[IP].src, max_values['ip_src'], template['ip_src'])
         elif f=='ip_dst':
-            p[IP].dst, _=inc_ip(p[IP].dst, 0)
+            p[IP].dst, m=inc_ip(p[IP].dst, max_values['ip_dst'], template['ip_dst'])
         elif f=='port_src':
             if p[IP].proto==6:
-                p[TCP].sport, _=inc_port(p[TCP].sport, 0)
+                p[TCP].sport, m=inc_port(p[TCP].sport, int(max_values['port_src']), int(template['port_src']))
             else:
-                p[UDP].sport, _=inc_port(p[UDP].sport, 0)
+                p[UDP].sport, m=inc_port(p[UDP].sport, int(max_values['port_src']), int(template['port_src']))
         elif f=='port_dst':
             if p[IP].proto==6:
-                p[TCP].dport, _=inc_port(p[TCP].dport, 0)
+                p[TCP].dport, m=inc_port(p[TCP].dport, int(max_values['port_dst']), int(template['port_dst']))
             else:
-                p[UDP].dport, _=inc_port(p[UDP].dport, 0)
-    return 0
+                p[UDP].dport, m=inc_port(p[UDP].dport, int(max_values['port_dst']), int(template['port_dst']))
+        if m==0:
+          return 0
+    return m
 
 def main():
     with open(args.config) as data_file:
@@ -62,7 +69,10 @@ def main():
     proto=int(template['proto'])
     port_src=int(template['port_src'])
     port_dst=int(template['port_dst'])
-    ranges=data['ranges']
+    ranges=data['ranges'].keys()
+    max_values={}
+    for r in ranges:
+      max_values[r]=data['ranges'][r]['max']
 
     pktlen=int(data['pktlen'])
 
@@ -83,8 +93,7 @@ def main():
             write_list.clear()
             pcap_index+=1
         p=p.copy()
-        increment(ranges, p, [], template)
-        (p[IP].src, _)=inc_ip(p[IP].src, 0)
+        increment(ranges, p, max_values, template)
 
 
     if len(write_list)>0:
